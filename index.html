@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Ops Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --mint: #00c5a1;
+    --mint-light: #e6faf6;
+    --mint-dark: #009e82;
+    --bg: #f7f8fa;
+    --white: #ffffff;
+    --border: #e8eaed;
+    --border-dark: #d0d4da;
+    --text-primary: #1a1d23;
+    --text-secondary: #6b7280;
+    --text-muted: #9ca3af;
+    --red: #ef4444;
+    --red-light: #fef2f2;
+    --amber: #f59e0b;
+    --amber-light: #fffbeb;
+    --green: #10b981;
+    --green-light: #ecfdf5;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+    --mono: 'DM Mono', monospace;
+    --sans: 'Noto Sans KR', sans-serif;
+    --radius: 12px;
+    --fixed-col-w: 180px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text-primary); font-family: var(--sans); font-size: 13px; min-height: 100vh; }
+
+  .topbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 16px; height: 52px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 200; box-shadow: var(--shadow-sm); }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; color: var(--text-primary); }
+  .logo-mark { width: 26px; height: 26px; background: var(--mint); border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .logo-mark svg { width: 14px; height: 14px; fill: white; }
+  .live-dot { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-secondary); font-family: var(--mono); }
+  .live-dot::before { content: ''; width: 6px; height: 6px; background: var(--mint); border-radius: 50%; animation: pulse 2s ease-in-out infinite; flex-shrink: 0; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+  .hero { background: linear-gradient(135deg, var(--mint-dark) 0%, var(--mint) 60%, #4dd9bf 100%); padding: 20px 16px; color: white; }
+  .hero-inner { max-width: 1360px; margin: 0 auto; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .hero-label { font-size: 10px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; opacity: .8; margin-bottom: 4px; }
+  .hero-title { font-size: 20px; font-weight: 700; letter-spacing: -.02em; line-height: 1.2; }
+  .hero-sub { font-size: 12px; opacity: .75; margin-top: 4px; }
+  .hero-stats { display: flex; gap: 8px; flex-shrink: 0; }
+  .hero-stat { background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.25); border-radius: 8px; padding: 8px 14px; text-align: center; min-width: 64px; }
+  .hero-stat .n { font-size: 20px; font-weight: 700; display: block; font-family: var(--mono); line-height: 1; }
+  .hero-stat .l { font-size: 9px; opacity: .75; letter-spacing: .08em; text-transform: uppercase; margin-top: 3px; display: block; }
+
+  .main { max-width: 1360px; margin: 0 auto; padding: 16px 16px 48px; }
+
+  .branch-filter { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin-bottom: 12px; box-shadow: var(--shadow-sm); }
+  .branch-filter-label { font-size: 10px; font-weight: 600; color: var(--text-muted); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 10px; }
+  .branch-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+  .branch-btn { background: var(--bg); border: 1px solid var(--border); border-radius: 16px; padding: 5px 12px; font-family: var(--sans); font-size: 12px; font-weight: 500; color: var(--text-secondary); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .branch-btn:hover { border-color: var(--mint); color: var(--mint-dark); background: var(--mint-light); }
+  .branch-btn.active { background: var(--mint); border-color: var(--mint); color: white; box-shadow: 0 2px 6px rgba(0,197,161,.3); }
+  .branch-btn.all-btn { background: var(--text-primary); border-color: var(--text-primary); color: white; }
+  .branch-btn.all-btn:hover { background: #2d3748; border-color: #2d3748; color: white; }
+  .branch-btn.all-btn.active { background: var(--text-primary); border-color: var(--text-primary); box-shadow: none; }
+
+  .info-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 12px; color: var(--text-secondary); box-shadow: var(--shadow-sm); }
+  .info-divider { color: var(--border-dark); }
+
+  .controls { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .search-wrap { position: relative; flex: 1; min-width: 160px; max-width: 260px; }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 14px; pointer-events: none; }
+  .search-box { background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px 8px 32px; color: var(--text-primary); font-family: var(--sans); font-size: 13px; width: 100%; outline: none; transition: border-color .2s, box-shadow .2s; box-shadow: var(--shadow-sm); }
+  .search-box:focus { border-color: var(--mint); box-shadow: 0 0 0 3px rgba(0,197,161,.12); }
+  .search-box::placeholder { color: var(--text-muted); }
+  .filter-btn { background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 7px 13px; color: var(--text-secondary); font-family: var(--sans); font-size: 12px; font-weight: 500; cursor: pointer; transition: all .15s; box-shadow: var(--shadow-sm); white-space: nowrap; }
+  .filter-btn:hover { border-color: var(--mint); color: var(--mint-dark); }
+  .filter-btn.active { background: var(--mint); border-color: var(--mint); color: white; box-shadow: 0 2px 6px rgba(0,197,161,.3); }
+  .count-badge { font-size: 11px; color: var(--text-muted); margin-left: auto; font-family: var(--mono); white-space: nowrap; }
+
+  .card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; animation: fadeUp .3s ease both; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  .table-outer { position: relative; overflow: hidden; }
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-left: var(--fixed-col-w); }
+  .table-fixed { position: absolute; left: 0; top: 0; width: var(--fixed-col-w); z-index: 10; background: var(--white); box-shadow: 2px 0 6px rgba(0,0,0,0.06); }
+
+  table { border-collapse: collapse; font-size: 12px; }
+  .table-fixed table { width: var(--fixed-col-w); }
+  .table-scroll table { width: max-content; }
+
+  thead tr { background: #f9fafb; border-bottom: 1px solid var(--border); }
+  th { padding: 10px 12px; text-align: left; font-size: 10px; font-weight: 600; color: var(--text-secondary); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; border-bottom: 1px solid var(--border); height: 40px; }
+  th.date-col { text-align: center; min-width: 62px; padding: 10px 4px; color: var(--text-muted); font-size: 10px; }
+  th.date-col.recent { color: var(--mint-dark); border-left: 2px solid var(--mint); }
+  th.enroll-col { text-align: center; min-width: 52px; }
+
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  .table-fixed td, .table-scroll td { height: 44px; }
+  .table-fixed tbody tr:hover, .table-scroll tbody tr:hover { background: #f9fffe; }
+
+  td { padding: 8px 12px; color: var(--text-primary); white-space: nowrap; vertical-align: middle; }
+  td.class-name { font-weight: 500; font-size: 12px; max-width: var(--fixed-col-w); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  td.branch-cell { font-size: 11px; color: var(--text-secondary); }
+  td.enroll-col { text-align: center; padding: 8px 6px; }
+  .enroll-num { font-family: var(--mono); font-size: 15px; font-weight: 700; color: var(--text-primary); }
+
+  td.date-val { text-align: center; padding: 0; font-family: var(--mono); font-size: 12px; font-weight: 500; }
+  td.date-val.recent-col { border-left: 2px solid var(--mint); }
+  td.date-val span { display: flex; align-items: center; justify-content: center; width: 100%; height: 44px; }
+  td.date-val.non-service { background: #f9fafb; }
+  td.date-val.non-service span { color: #d1d5db; font-size: 14px; }
+
+  .status-badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 16px; font-size: 10px; font-weight: 600; }
+  .status-badge::before { content: ''; width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; }
+  .status-on { background: var(--green-light); color: #059669; }
+  .status-on::before { background: #059669; }
+  .status-off { background: var(--red-light); color: var(--red); }
+  .status-off::before { background: var(--red); }
+  .status-sanity { background: var(--amber-light); color: #92400e; }
+  .status-sanity::before { background: var(--amber); }
+  .status-suspended { background: #e5e7eb; color: #374151; }
+  .status-suspended::before { background: #6b7280; }
+  .status-cancelled { background: #d1d5db; color: #1f2937; }
+  .status-cancelled::before { background: #4b5563; }
+  .status-other { background: #f3f4f6; color: var(--text-secondary); }
+  .status-other::before { background: var(--text-muted); }
+
+  .state-box { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; gap: 12px; color: var(--text-secondary); font-size: 13px; }
+  .spinner { width: 26px; height: 26px; border: 2px solid var(--border); border-top-color: var(--mint); border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  .no-data { padding: 40px; text-align: center; color: var(--text-muted); font-size: 13px; }
+
+  footer { margin-top: 24px; font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-family: var(--mono); }
+
+  @media (max-width: 640px) {
+    :root { --fixed-col-w: 140px; }
+    .hero-stats { gap: 6px; }
+    .hero-stat { padding: 6px 10px; min-width: 52px; }
+    .hero-stat .n { font-size: 17px; }
+    .hero-title { font-size: 17px; }
+    .filter-btn { padding: 6px 10px; font-size: 11px; }
+    .info-bar { font-size: 11px; }
+    th { padding: 8px 8px; font-size: 9px; }
+    td { padding: 6px 8px; font-size: 11px; }
+    td.class-name { font-size: 11px; }
+    .enroll-num { font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 16 16"><path d="M8 1L1 5v6l7 4 7-4V5L8 1zm0 2l5 2.5v5L8 13 3 10.5v-5L8 3z"/></svg>
+    </div>
+    Playtag Ops
+  </div>
+  <span class="live-dot" id="live-label">Connecting...</span>
+</div>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div>
+      <div class="hero-label">Daily Operations Dashboard</div>
+      <div class="hero-title" id="main-title">Loading...</div>
+      <div class="hero-sub" id="header-meta">Fetching data...</div>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><span class="n" id="stat-total">—</span><span class="l">Total</span></div>
+      <div class="hero-stat"><span class="n" id="stat-on">—</span><span class="l">Active</span></div>
+      <div class="hero-stat"><span class="n" id="stat-off">—</span><span class="l">Inactive</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="branch-filter">
+    <div class="branch-filter-label">지사 선택</div>
+    <div class="branch-btns" id="branch-btns">
+      <button class="branch-btn all-btn active" data-branch="">전체</button>
+    </div>
+  </div>
+
+  <div class="info-bar">
+    <span>📊 표시된 숫자는 해당일 생성된 스토리 수(원아)를 의미합니다</span>
+    <span class="info-divider">·</span>
+    <span>⚪ 서비스 요일이 아닌 날짜</span>
+  </div>
+
+  <div class="controls">
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input class="search-box" type="text" id="search" placeholder="기관명 검색...">
+    </div>
+    <button class="filter-btn active" data-filter="all">전체</button>
+    <button class="filter-btn" data-filter="on">Active</button>
+    <button class="filter-btn" data-filter="off">Inactive</button>
+    <span class="count-badge" id="count-badge"></span>
+  </div>
+
+  <div class="card">
+    <div id="content">
+      <div class="state-box"><div class="spinner"></div><div>데이터를 불러오는 중...</div></div>
+    </div>
+  </div>
+
+  <footer>
+    <span>Source: Google Sheets — 스토리생성현황_10d</span>
+    <span id="footer-time"></span>
+  </footer>
+</div>
+
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbzrliD6JIDRNIEllNcaWzZlcGuL7i7C3h-kHLuWYg0Xrv9F0doeqDXvCaWaDtu_4aU6dA/exec';
+
+let allRows = [], dateHeaders = [], allBranches = [];
+let currentBranch = '', currentFilter = 'all', searchVal = '';
+
+async function init() {
+  try {
+    const res = await fetch(API);
+    const data = await res.json();
+    if (!data.ok) throw new Error('API error');
+    allRows = data.rows;
+    allBranches = data.branches || [];
+    if (allRows.length > 0) dateHeaders = allRows[0].dates.map(d => d.label);
+    const now = new Date();
+    const timeStr = now.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    document.getElementById('footer-time').textContent = `Last updated: ${timeStr}`;
+    document.getElementById('live-label').textContent = 'Live';
+    buildBranchButtons();
+    updateHero();
+    renderTable();
+  } catch (err) {
+    document.getElementById('content').innerHTML =
+      `<div class="state-box"><div style="color:var(--red)">⚠ 데이터를 불러올 수 없습니다</div><div style="font-size:11px;color:var(--text-muted)">${err.message}</div></div>`;
+  }
+}
+
+function buildBranchButtons() {
+  const wrap = document.getElementById('branch-btns');
+  wrap.innerHTML = '';
+  const allBtn = document.createElement('button');
+  allBtn.className = 'branch-btn all-btn active';
+  allBtn.dataset.branch = '';
+  allBtn.textContent = '전체';
+  allBtn.addEventListener('click', () => selectBranch(''));
+  wrap.appendChild(allBtn);
+  allBranches.forEach(b => {
+    const btn = document.createElement('button');
+    btn.className = 'branch-btn';
+    btn.dataset.branch = b;
+    btn.textContent = b;
+    btn.addEventListener('click', () => selectBranch(b));
+    wrap.appendChild(btn);
+  });
+}
+
+function selectBranch(b) {
+  currentBranch = b;
+  document.querySelectorAll('.branch-btn').forEach(el => el.classList.toggle('active', el.dataset.branch === b));
+  updateHero(); renderTable();
+}
+
+function updateHero() {
+  const label = currentBranch || '전체 지사';
+  document.getElementById('main-title').textContent = label;
+  document.title = `${label} — Playtag Ops`;
+  document.getElementById('header-meta').textContent = `총 ${getFiltered().length}개 교실`;
+}
+
+function isOn(s) { return String(s).toUpperCase().includes('ON'); }
+
+function getStatusClass(status) {
+  const s = String(status).toUpperCase();
+  if (s.includes('ON'))     return 'status-on';
+  if (s.includes('SANITY')) return 'status-sanity';
+  if (s.includes('유예'))    return 'status-suspended';
+  if (s.includes('취소'))    return 'status-cancelled';
+  if (status)                return 'status-off';
+  return 'status-other';
+}
+
+function getFiltered() {
+  return allRows.filter(r => {
+    const mb = currentBranch === '' || r.branch === currentBranch;
+    const ms = searchVal === '' || String(r.className).toLowerCase().includes(searchVal);
+    const mf = currentFilter === 'all' ? true : currentFilter === 'on' ? isOn(r.status) : !isOn(r.status);
+    return mb && ms && mf;
+  });
+}
+
+function renderStats() {
+  const f = getFiltered();
+  const on = f.filter(r => isOn(r.status)).length;
+  document.getElementById('stat-total').textContent = f.length;
+  document.getElementById('stat-on').textContent = on;
+  document.getElementById('stat-off').textContent = f.length - on;
+  document.getElementById('count-badge').textContent = `${f.length}개 교실`;
+}
+
+function ratioToColor(ratio) {
+  if (ratio === null) return { bg: '#f9fafb', text: '#9ca3af' };
+  const c = Math.max(0, Math.min(1, ratio));
+  if (c >= 0.9) return { bg: '#d1fae5', text: '#065f46' };
+  if (c >= 0.7) return { bg: '#a7f3d0', text: '#065f46' };
+  if (c >= 0.5) return { bg: '#fef9c3', text: '#854d0e' };
+  if (c >= 0.3) return { bg: '#fed7aa', text: '#9a3412' };
+  if (c > 0)    return { bg: '#fecaca', text: '#991b1b' };
+  return { bg: '#f9fafb', text: '#9ca3af' };
+}
+
+function renderTable() {
+  const rows = getFiltered();
+  renderStats();
+  if (rows.length === 0) {
+    document.getElementById('content').innerHTML = '<div class="no-data">검색 결과가 없습니다.</div>';
+    return;
+  }
+
+  const showBranch = currentBranch === '';
+  let fixedHead = '<thead><tr><th class="class-name">기관+교실명</th></tr></thead>';
+  let scrollHead = '<thead><tr>';
+  if (showBranch) scrollHead += '<th>지사</th>';
+  scrollHead += '<th>시작일</th><th>요일</th><th>스케줄</th><th>상태</th><th class="enroll-col">등록<br>원아수</th>';
+  dateHeaders.forEach((h, i) => {
+    scrollHead += `<th class="date-col${i === 0 ? ' recent' : ''}">${h}</th>`;
+  });
+  scrollHead += '</tr></thead>';
+
+  let fixedBody = '<tbody>', scrollBody = '<tbody>';
+
+  rows.forEach(r => {
+    const sc = getStatusClass(r.status);
+    const enroll = Number(r.enrollment) || 0;
+
+    fixedBody += `<tr><td class="class-name">${r.className || '—'}</td></tr>`;
+
+    scrollBody += '<tr>';
+    if (showBranch) scrollBody += `<td class="branch-cell">${r.branch || '—'}</td>`;
+    scrollBody += `<td style="color:var(--text-secondary);font-size:11px">${r.startDate || '—'}</td>`;
+    scrollBody += `<td style="color:var(--text-secondary)">${r.serviceDay || '—'}</td>`;
+    scrollBody += `<td style="color:var(--text-secondary);font-size:11px">${r.schedule || '—'}</td>`;
+    scrollBody += `<td><span class="status-badge ${sc}">${r.status || '—'}</span></td>`;
+    scrollBody += `<td class="enroll-col"><span class="enroll-num">${enroll || '—'}</span></td>`;
+
+    r.dates.forEach((d, i) => {
+      const isNonService = d.value === '⚪';
+      const rc = i === 0 ? ' recent-col' : '';
+
+      if (isNonService) {
+        // 서비스 요일 아님 → 회색 배경 + ⚪
+        scrollBody += `<td class="date-val${rc} non-service"><span>⚪</span></td>`;
+      } else {
+        const raw = (d.value === '' || d.value === null || d.value === undefined) ? null : Number(d.value);
+        const val = (raw !== null && isNaN(raw)) ? null : raw;
+        const ratio = (val !== null && enroll > 0) ? val / enroll : null;
+        const { bg, text } = ratioToColor(ratio);
+        const display = val === null ? '—' : val;
+        scrollBody += `<td class="date-val${rc}" style="background:${bg}"><span style="color:${text}">${display}</span></td>`;
+      }
+    });
+
+    scrollBody += '</tr>';
+  });
+
+  fixedBody += '</tbody>';
+  scrollBody += '</tbody>';
+
+  document.getElementById('content').innerHTML = `
+    <div class="table-outer">
+      <div class="table-fixed"><table>${fixedHead}${fixedBody}</table></div>
+      <div class="table-scroll"><table>${scrollHead}${scrollBody}</table></div>
+    </div>`;
+
+  syncRowHeights();
+}
+
+function syncRowHeights() {
+  const fixedRows = document.querySelectorAll('.table-fixed tbody tr');
+  const scrollRows = document.querySelectorAll('.table-scroll tbody tr');
+  fixedRows.forEach((row, i) => {
+    if (!scrollRows[i]) return;
+    const h = Math.max(row.offsetHeight, scrollRows[i].offsetHeight);
+    row.style.height = h + 'px';
+    scrollRows[i].style.height = h + 'px';
+  });
+  const fh = document.querySelector('.table-fixed thead tr');
+  const sh = document.querySelector('.table-scroll thead tr');
+  if (fh && sh) {
+    const h = Math.max(fh.offsetHeight, sh.offsetHeight);
+    fh.style.height = h + 'px';
+    sh.style.height = h + 'px';
+  }
+}
+
+document.getElementById('search').addEventListener('input', e => {
+  searchVal = e.target.value.toLowerCase();
+  renderTable(); updateHero();
+});
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    renderTable(); renderStats();
+  });
+});
+
+init();
+</script>
+</body>
+</html>
