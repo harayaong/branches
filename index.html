@@ -216,7 +216,8 @@
 const API = 'https://script.google.com/macros/s/AKfycbzrliD6JIDRNIEllNcaWzZlcGuL7i7C3h-kHLuWYg0Xrv9F0doeqDXvCaWaDtu_4aU6dA/exec';
 
 let allRows = [], dateHeaders = [], allBranches = [];
-let currentBranch = '', currentFilter = 'all', searchVal = '';
+const _urlBranch = decodeURIComponent(new URLSearchParams(location.search).get('branch') || '');
+let currentBranch = _urlBranch, currentFilter = 'all', searchVal = '';
 
 async function init() {
   try {
