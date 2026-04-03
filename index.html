@@ -231,6 +231,10 @@ async function init() {
     const timeStr = now.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
     document.getElementById('footer-time').textContent = `Last updated: ${timeStr}`;
     document.getElementById('live-label').textContent = 'Live';
+    // URL로 특정 지사 접근 시 지사 선택 버튼 숨김
+    if (_urlBranch) {
+      document.getElementById('branch-filter').style.display = 'none';
+    }
     buildBranchButtons();
     updateHero();
     renderTable();
@@ -286,7 +290,8 @@ function getStatusClass(status) {
 
 function getFiltered() {
   return allRows.filter(r => {
-    const mb = currentBranch === '' || r.branch === currentBranch;
+    const activeBranch = _urlBranch || currentBranch;
+    const mb = activeBranch === '' || r.branch === activeBranch;
     const ms = searchVal === '' || String(r.className).toLowerCase().includes(searchVal);
     const mf = currentFilter === 'all' ? true : currentFilter === 'on' ? isOn(r.status) : !isOn(r.status);
     return mb && ms && mf;
