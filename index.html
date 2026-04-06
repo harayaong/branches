@@ -68,6 +68,9 @@
   .nas-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: #fff5f5; border: 1px solid #fecaca; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 12px; color: #991b1b; box-shadow: var(--shadow-sm); }
   .nas-bar-label { font-weight: 600; white-space: nowrap; }
   .nas-bar-time { font-family: var(--mono); font-size: 11px; color: #b91c1c; opacity: .8; margin-left: auto; white-space: nowrap; }
+  .video-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 12px; color: #92400e; box-shadow: var(--shadow-sm); }
+  .video-bar-label { font-weight: 600; white-space: nowrap; }
+  .video-bar-time { font-family: var(--mono); font-size: 11px; color: #b45309; opacity: .8; margin-left: auto; white-space: nowrap; }
 
   .controls { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
   .search-wrap { position: relative; flex: 1; min-width: 160px; max-width: 260px; }
@@ -164,6 +167,15 @@
   td.nas-col { width: 58px; text-align: center; padding: 8px 4px; }
   td.status-col { width: 80px; padding: 8px 6px; }
   .nas-badge { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; background: #fecaca; color: #991b1b; }
+  .video-badge { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; background: #fef3c7; color: #92400e; }
+
+  /* NAS+VIDEO 복합 행 */
+  .table-fixed tbody tr.nas-row td, .table-scroll tbody tr.nas-row td { background: #fff5f5; }
+  .table-fixed tbody tr.nas-row:hover td, .table-scroll tbody tr.nas-row:hover td { background: #fee2e2; }
+  .table-fixed tbody tr.video-row td, .table-scroll tbody tr.video-row td { background: #fffbeb; }
+  .table-fixed tbody tr.video-row:hover td, .table-scroll tbody tr.video-row:hover td { background: #fef3c7; }
+  .table-fixed tbody tr.nas-video-row td, .table-scroll tbody tr.nas-video-row td { background: #fff0f0; }
+  .table-fixed tbody tr.nas-video-row:hover td, .table-scroll tbody tr.nas-video-row:hover td { background: #fee2e2; }
 
   td.branch-cell { font-size: 11px; color: var(--text-secondary); }
   td.enroll-col { text-align: center; padding: 8px 6px; }
@@ -256,12 +268,20 @@
     <span class="nas-bar-time" id="nas-bar-time"></span>
   </div>
 
+  <div class="video-bar" id="video-bar" style="display:none">
+    <span class="video-bar-label">🟡 VIDEO 85% 미만</span>
+    <span id="video-bar-count"></span>
+    <span class="video-bar-time" id="video-bar-time"></span>
+  </div>
+
   <div class="info-bar">
     <span>📊 표시된 숫자는 해당일 생성된 스토리 수(원아)를 의미합니다</span>
     <span class="info-divider">·</span>
     <span>⚪ 서비스 요일이 아닌 날짜</span>
     <span class="info-divider">·</span>
     <span>🔴 NAS OFF 교실은 붉은색으로 표시</span>
+    <span class="info-divider">·</span>
+    <span>🟡 VIDEO 업로드 85% 미만 교실은 노란색으로 표시</span>
   </div>
 
   <div class="controls">
@@ -273,6 +293,7 @@
     <button class="filter-btn" data-filter="on">Active</button>
     <button class="filter-btn" data-filter="off">Inactive</button>
     <button class="filter-btn" data-filter="nas">NAS OFF</button>
+    <button class="filter-btn" data-filter="video">VIDEO &lt;85%</button>
     <span class="count-badge" id="count-badge"></span>
   </div>
 
@@ -293,6 +314,7 @@ const API = 'https://script.google.com/macros/s/AKfycbzrliD6JIDRNIEllNcaWzZlcGuL
 
 let allRows = [], dateHeaders = [], allBranches = [];
 let nasOffIds = new Set(), nasTimestamp = null;
+let videoIds = new Set(), videoTimestamp = null;
 const _urlBranch = decodeURIComponent(new URLSearchParams(location.search).get('branch') || '');
 let currentBranch = _urlBranch, currentFilter = 'all', searchVal = '';
 
@@ -311,6 +333,11 @@ async function init() {
       nasTimestamp = data.nasOffData.timestamp || null;
     }
 
+    if (data.videoData) {
+      videoIds = new Set(data.videoData.siteIds || []);
+      videoTimestamp = data.videoData.timestamp || null;
+    }
+
     const now = new Date();
     const timeStr = now.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
     document.getElementById('footer-time').textContent = `Last updated: ${timeStr}`;
@@ -324,6 +351,12 @@ async function init() {
       document.getElementById('nas-bar').style.display = 'flex';
       document.getElementById('nas-bar-count').textContent = `현재 ${nasOffIds.size}개 교실 NAS OFF 상태`;
       if (nasTimestamp) document.getElementById('nas-bar-time').textContent = `기준: ${nasTimestamp}`;
+    }
+
+    if (videoIds.size > 0) {
+      document.getElementById('video-bar').style.display = 'flex';
+      document.getElementById('video-bar-count').textContent = `현재 ${videoIds.size}개 교실 업로드 85% 미만`;
+      if (videoTimestamp) document.getElementById('video-bar-time').textContent = `기준: ${videoTimestamp}`;
     }
 
     buildBranchButtons();
@@ -392,6 +425,7 @@ function getFiltered() {
     else if (currentFilter === 'on') mf = isOn(r.status);
     else if (currentFilter === 'off') mf = !isOn(r.status);
     else if (currentFilter === 'nas') mf = nasOffIds.has(r.siteID);
+    else if (currentFilter === 'video') mf = videoIds.has(r.siteID);
     else mf = true;
     return mb && ms && mf;
   });
@@ -445,16 +479,20 @@ function renderTable() {
 
   rows.forEach(r => {
     const isNasOff = nasOffIds.has(r.siteID);
+    const isVideo = videoIds.has(r.siteID);
     const sc = getStatusClass(r.status);
     const enroll = Number(r.enrollment) || 0;
-    const rowClass = isNasOff ? ' class="nas-row"' : '';
+    let rowClass = '';
+    if (isNasOff && isVideo) rowClass = ' class="nas-video-row"';
+    else if (isNasOff) rowClass = ' class="nas-row"';
+    else if (isVideo) rowClass = ' class="video-row"';
     const siteIdSafe = (r.siteID || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     const classNameSafe = (r.className || '—').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
     fixedRows += `<tr${rowClass}>`;
     fixedRows += `<td class="class-name" data-siteid="${siteIdSafe}">${classNameSafe}</td>`;
     fixedRows += `<td class="status-col"><span class="status-badge ${sc}">${r.status || '—'}</span></td>`;
-    fixedRows += `<td class="nas-col">${isNasOff ? '<span class="nas-badge">OFF</span>' : ''}</td>`;
+    fixedRows += `<td class="nas-col">${isNasOff ? '<span class="nas-badge">NAS</span>' : ''}${isVideo ? '<span class="video-badge">V</span>' : ''}</td>`;
     fixedRows += `</tr>`;
 
     scrollRows += `<tr${rowClass}>`;
