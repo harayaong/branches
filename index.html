@@ -66,6 +66,16 @@
   .info-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 12px; color: var(--text-secondary); box-shadow: var(--shadow-sm); }
   .info-divider { color: var(--border-dark); }
 
+  /* NAS OFF 배너 */
+  .nas-bar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: #fff5f5; border: 1px solid #fecaca; border-radius: 8px;
+    padding: 10px 14px; margin-bottom: 12px; font-size: 12px;
+    color: #991b1b; box-shadow: var(--shadow-sm);
+  }
+  .nas-bar-label { font-weight: 600; white-space: nowrap; }
+  .nas-bar-time { font-family: var(--mono); font-size: 11px; color: #b91c1c; opacity: .8; margin-left: auto; white-space: nowrap; }
+
   .controls { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
   .search-wrap { position: relative; flex: 1; min-width: 160px; max-width: 260px; }
   .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 14px; pointer-events: none; }
@@ -93,17 +103,28 @@
   th.date-col { text-align: center; min-width: 62px; padding: 10px 4px; color: var(--text-muted); font-size: 10px; }
   th.date-col.recent { color: var(--mint-dark); border-left: 2px solid var(--mint); }
   th.enroll-col { text-align: center; min-width: 52px; }
+  th.nas-col { text-align: center; min-width: 52px; }
 
   tbody tr { border-bottom: 1px solid var(--border); }
   tbody tr:last-child { border-bottom: none; }
   .table-fixed td, .table-scroll td { height: 44px; }
   .table-fixed tbody tr:hover, .table-scroll tbody tr:hover { background: #f9fffe; }
+  .table-fixed tbody tr.nas-row, .table-scroll tbody tr.nas-row { background: #fff5f5; }
+  .table-fixed tbody tr.nas-row:hover, .table-scroll tbody tr.nas-row:hover { background: #fee2e2; }
 
   td { padding: 8px 12px; color: var(--text-primary); white-space: nowrap; vertical-align: middle; }
   td.class-name { font-weight: 500; font-size: 12px; max-width: var(--fixed-col-w); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   td.branch-cell { font-size: 11px; color: var(--text-secondary); }
   td.enroll-col { text-align: center; padding: 8px 6px; }
   .enroll-num { font-family: var(--mono); font-size: 15px; font-weight: 700; color: var(--text-primary); }
+  td.nas-col { text-align: center; padding: 8px 6px; }
+
+  /* NAS OFF 배지 */
+  .nas-badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: 700;
+    background: #fecaca; color: #991b1b;
+  }
 
   td.date-val { text-align: center; padding: 0; font-family: var(--mono); font-size: 12px; font-weight: 500; }
   td.date-val.recent-col { border-left: 2px solid var(--mint); }
@@ -140,7 +161,7 @@
     .hero-stat .n { font-size: 17px; }
     .hero-title { font-size: 17px; }
     .filter-btn { padding: 6px 10px; font-size: 11px; }
-    .info-bar { font-size: 11px; }
+    .info-bar, .nas-bar { font-size: 11px; }
     th { padding: 8px 8px; font-size: 9px; }
     td { padding: 6px 8px; font-size: 11px; }
     td.class-name { font-size: 11px; }
@@ -171,6 +192,7 @@
       <div class="hero-stat"><span class="n" id="stat-total">—</span><span class="l">Total</span></div>
       <div class="hero-stat"><span class="n" id="stat-on">—</span><span class="l">Active</span></div>
       <div class="hero-stat"><span class="n" id="stat-off">—</span><span class="l">Inactive</span></div>
+      <div class="hero-stat"><span class="n" id="stat-nas" style="color:#fca5a5">—</span><span class="l">NAS OFF</span></div>
     </div>
   </div>
 </div>
@@ -183,10 +205,18 @@
     </div>
   </div>
 
+  <div class="nas-bar" id="nas-bar" style="display:none">
+    <span class="nas-bar-label">🔴 NAS OFF</span>
+    <span id="nas-bar-count"></span>
+    <span class="nas-bar-time" id="nas-bar-time"></span>
+  </div>
+
   <div class="info-bar">
     <span>📊 표시된 숫자는 해당일 생성된 스토리 수(원아)를 의미합니다</span>
     <span class="info-divider">·</span>
     <span>⚪ 서비스 요일이 아닌 날짜</span>
+    <span class="info-divider">·</span>
+    <span>🔴 NAS OFF 교실은 붉은색으로 표시</span>
   </div>
 
   <div class="controls">
@@ -197,6 +227,7 @@
     <button class="filter-btn active" data-filter="all">전체</button>
     <button class="filter-btn" data-filter="on">Active</button>
     <button class="filter-btn" data-filter="off">Inactive</button>
+    <button class="filter-btn" data-filter="nas">NAS OFF</button>
     <span class="count-badge" id="count-badge"></span>
   </div>
 
@@ -216,25 +247,42 @@
 const API = 'https://script.google.com/macros/s/AKfycbzrliD6JIDRNIEllNcaWzZlcGuL7i7C3h-kHLuWYg0Xrv9F0doeqDXvCaWaDtu_4aU6dA/exec';
 
 let allRows = [], dateHeaders = [], allBranches = [];
+let nasOffIds = new Set(), nasTimestamp = null;
 const _urlBranch = decodeURIComponent(new URLSearchParams(location.search).get('branch') || '');
 let currentBranch = _urlBranch, currentFilter = 'all', searchVal = '';
 
 async function init() {
   try {
-    const res = await fetch(API);
+    const res = await fetch(API + (_urlBranch ? `?branch=${encodeURIComponent(_urlBranch)}` : ''));
     const data = await res.json();
     if (!data.ok) throw new Error('API error');
+
     allRows = data.rows;
     allBranches = data.branches || [];
     if (allRows.length > 0) dateHeaders = allRows[0].dates.map(d => d.label);
+
+    // NAS OFF 데이터 처리
+    if (data.nasOffData) {
+      nasOffIds = new Set(data.nasOffData.siteIds || []);
+      nasTimestamp = data.nasOffData.timestamp || null;
+    }
+
     const now = new Date();
     const timeStr = now.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
     document.getElementById('footer-time').textContent = `Last updated: ${timeStr}`;
     document.getElementById('live-label').textContent = 'Live';
-    // URL로 특정 지사 접근 시 지사 선택 버튼 숨김
+
     if (_urlBranch) {
       document.getElementById('branch-filter').style.display = 'none';
     }
+
+    // NAS OFF 배너 표시
+    if (nasOffIds.size > 0) {
+      document.getElementById('nas-bar').style.display = 'flex';
+      document.getElementById('nas-bar-count').textContent = `현재 ${nasOffIds.size}개 교실 NAS OFF 상태`;
+      if (nasTimestamp) document.getElementById('nas-bar-time').textContent = `기준: ${nasTimestamp}`;
+    }
+
     buildBranchButtons();
     updateHero();
     renderTable();
@@ -270,10 +318,13 @@ function selectBranch(b) {
 }
 
 function updateHero() {
-  const label = currentBranch || '전체 지사';
-  document.getElementById('main-title').textContent = label;
+  const label = currentBranch || (_urlBranch || '전체 지사');
+  document.getElementById('main-title').textContent = _urlBranch || currentBranch || '전체 지사';
   document.title = `${label} — Playtag Ops`;
-  document.getElementById('header-meta').textContent = `총 ${getFiltered().length}개 교실`;
+  const f = getFiltered();
+  const nasCount = f.filter(r => nasOffIds.has(r.siteID)).length;
+  document.getElementById('header-meta').textContent = `총 ${f.length}개 교실`;
+  document.getElementById('stat-nas').textContent = nasCount;
 }
 
 function isOn(s) { return String(s).toUpperCase().includes('ON'); }
@@ -293,7 +344,12 @@ function getFiltered() {
     const activeBranch = _urlBranch || currentBranch;
     const mb = activeBranch === '' || r.branch === activeBranch;
     const ms = searchVal === '' || String(r.className).toLowerCase().includes(searchVal);
-    const mf = currentFilter === 'all' ? true : currentFilter === 'on' ? isOn(r.status) : !isOn(r.status);
+    let mf;
+    if (currentFilter === 'all') mf = true;
+    else if (currentFilter === 'on') mf = isOn(r.status);
+    else if (currentFilter === 'off') mf = !isOn(r.status);
+    else if (currentFilter === 'nas') mf = nasOffIds.has(r.siteID);
+    else mf = true;
     return mb && ms && mf;
   });
 }
@@ -301,9 +357,11 @@ function getFiltered() {
 function renderStats() {
   const f = getFiltered();
   const on = f.filter(r => isOn(r.status)).length;
+  const nas = f.filter(r => nasOffIds.has(r.siteID)).length;
   document.getElementById('stat-total').textContent = f.length;
   document.getElementById('stat-on').textContent = on;
   document.getElementById('stat-off').textContent = f.length - on;
+  document.getElementById('stat-nas').textContent = nas;
   document.getElementById('count-badge').textContent = `${f.length}개 교실`;
 }
 
@@ -326,9 +384,10 @@ function renderTable() {
     return;
   }
 
-  const showBranch = currentBranch === '';
+  const showBranch = (_urlBranch === '' && currentBranch === '');
   let fixedHead = '<thead><tr><th class="class-name">기관+교실명</th></tr></thead>';
   let scrollHead = '<thead><tr>';
+  scrollHead += '<th class="nas-col">NAS</th>';
   if (showBranch) scrollHead += '<th>지사</th>';
   scrollHead += '<th>시작일</th><th>요일</th><th>스케줄</th><th>상태</th><th class="enroll-col">등록<br>원아수</th>';
   dateHeaders.forEach((h, i) => {
@@ -339,12 +398,15 @@ function renderTable() {
   let fixedBody = '<tbody>', scrollBody = '<tbody>';
 
   rows.forEach(r => {
+    const isNasOff = nasOffIds.has(r.siteID);
     const sc = getStatusClass(r.status);
     const enroll = Number(r.enrollment) || 0;
+    const rowClass = isNasOff ? ' class="nas-row"' : '';
 
-    fixedBody += `<tr><td class="class-name">${r.className || '—'}</td></tr>`;
+    fixedBody += `<tr${rowClass}><td class="class-name">${r.className || '—'}</td></tr>`;
 
-    scrollBody += '<tr>';
+    scrollBody += `<tr${rowClass}>`;
+    scrollBody += `<td class="nas-col">${isNasOff ? '<span class="nas-badge">OFF</span>' : ''}</td>`;
     if (showBranch) scrollBody += `<td class="branch-cell">${r.branch || '—'}</td>`;
     scrollBody += `<td style="color:var(--text-secondary);font-size:11px">${r.startDate || '—'}</td>`;
     scrollBody += `<td style="color:var(--text-secondary)">${r.serviceDay || '—'}</td>`;
@@ -355,9 +417,7 @@ function renderTable() {
     r.dates.forEach((d, i) => {
       const isNonService = d.value === '⚪';
       const rc = i === 0 ? ' recent-col' : '';
-
       if (isNonService) {
-        // 서비스 요일 아님 → 회색 배경 + ⚪
         scrollBody += `<td class="date-val${rc} non-service"><span>⚪</span></td>`;
       } else {
         const raw = (d.value === '' || d.value === null || d.value === undefined) ? null : Number(d.value);
@@ -368,7 +428,6 @@ function renderTable() {
         scrollBody += `<td class="date-val${rc}" style="background:${bg}"><span style="color:${text}">${display}</span></td>`;
       }
     });
-
     scrollBody += '</tr>';
   });
 
