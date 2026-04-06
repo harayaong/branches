@@ -27,7 +27,6 @@
     --mono: 'DM Mono', monospace;
     --sans: 'Noto Sans KR', sans-serif;
     --radius: 12px;
-    --fixed-col-w: 180px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -66,13 +65,7 @@
   .info-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 12px; color: var(--text-secondary); box-shadow: var(--shadow-sm); }
   .info-divider { color: var(--border-dark); }
 
-  /* NAS OFF 배너 */
-  .nas-bar {
-    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-    background: #fff5f5; border: 1px solid #fecaca; border-radius: 8px;
-    padding: 10px 14px; margin-bottom: 12px; font-size: 12px;
-    color: #991b1b; box-shadow: var(--shadow-sm);
-  }
+  .nas-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: #fff5f5; border: 1px solid #fecaca; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 12px; color: #991b1b; box-shadow: var(--shadow-sm); }
   .nas-bar-label { font-weight: 600; white-space: nowrap; }
   .nas-bar-time { font-family: var(--mono); font-size: 11px; color: #b91c1c; opacity: .8; margin-left: auto; white-space: nowrap; }
 
@@ -90,41 +83,91 @@
   .card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; animation: fadeUp .3s ease both; }
   @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 
+  /* =====================
+     테이블 레이아웃
+     고정컬럼: 기관+교실명(200px) + NAS(58px) = 258px
+  ===================== */
   .table-outer { position: relative; overflow: hidden; }
-  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-left: var(--fixed-col-w); }
-  .table-fixed { position: absolute; left: 0; top: 0; width: var(--fixed-col-w); z-index: 10; background: var(--white); box-shadow: 2px 0 6px rgba(0,0,0,0.06); }
 
-  table { border-collapse: collapse; font-size: 12px; }
-  .table-fixed table { width: var(--fixed-col-w); }
-  .table-scroll table { width: max-content; }
+  /* 고정 컬럼 영역 */
+  .table-fixed {
+    position: absolute; left: 0; top: 0;
+    width: 338px;
+    z-index: 10;
+    background: var(--white);
+    box-shadow: 3px 0 8px rgba(0,0,0,0.08);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .table-fixed .thead-wrap { flex-shrink: 0; overflow: hidden; }
+  .table-fixed .tbody-wrap { overflow: hidden; max-height: calc(100vh - 340px); }
+  .table-fixed table { width: 338px; table-layout: fixed; border-collapse: collapse; font-size: 12px; }
 
-  thead tr { background: #f9fafb; border-bottom: 1px solid var(--border); }
-  th { padding: 10px 12px; text-align: left; font-size: 10px; font-weight: 600; color: var(--text-secondary); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; border-bottom: 1px solid var(--border); height: 40px; }
+  /* 스크롤 컬럼 영역 */
+  .table-scroll {
+    margin-left: 338px;
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: calc(100vh - 300px);
+    -webkit-overflow-scrolling: touch;
+  }
+  .table-scroll table { width: max-content; border-collapse: collapse; font-size: 12px; }
+  .table-scroll thead tr { position: sticky; top: 0; z-index: 5; }
+
+  /* 헤더 공통 */
+  thead tr { background: #f9fafb; }
+  th {
+    padding: 10px 12px; text-align: left;
+    font-size: 10px; font-weight: 600; color: var(--text-secondary);
+    letter-spacing: .06em; text-transform: uppercase;
+    white-space: nowrap; height: 40px;
+    background: #f9fafb;
+    border-bottom: 2px solid var(--border);
+  }
+  th.class-name-col { width: 200px; }
+  th.status-col { width: 80px; }
+  th.nas-col { width: 58px; min-width: 58px; text-align: center; padding: 10px 4px; }
   th.date-col { text-align: center; min-width: 62px; padding: 10px 4px; color: var(--text-muted); font-size: 10px; }
   th.date-col.recent { color: var(--mint-dark); border-left: 2px solid var(--mint); }
   th.enroll-col { text-align: center; min-width: 52px; }
-  th.nas-col { text-align: center; min-width: 52px; }
 
+  /* 바디 공통 */
   tbody tr { border-bottom: 1px solid var(--border); }
   tbody tr:last-child { border-bottom: none; }
   .table-fixed td, .table-scroll td { height: 44px; }
-  .table-fixed tbody tr:hover, .table-scroll tbody tr:hover { background: #f9fffe; }
-  .table-fixed tbody tr.nas-row, .table-scroll tbody tr.nas-row { background: #fff5f5; }
-  .table-fixed tbody tr.nas-row:hover, .table-scroll tbody tr.nas-row:hover { background: #fee2e2; }
+  .table-fixed tbody tr:hover td, .table-scroll tbody tr:hover td { background: #f9fffe; }
+  .table-fixed tbody tr.nas-row td, .table-scroll tbody tr.nas-row td { background: #fff5f5; }
+  .table-fixed tbody tr.nas-row:hover td, .table-scroll tbody tr.nas-row:hover td { background: #fee2e2; }
 
   td { padding: 8px 12px; color: var(--text-primary); white-space: nowrap; vertical-align: middle; }
-  td.class-name { font-weight: 500; font-size: 12px; max-width: var(--fixed-col-w); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* 기관+교실명 셀 */
+  td.class-name {
+    width: 200px; max-width: 200px;
+    font-weight: 500; font-size: 12px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    cursor: default;
+  }
+
+  /* 전역 siteID 툴팁 (fixed) */
+  #siteid-tooltip {
+    display: none;
+    position: fixed;
+    background: #1a1d23; color: #e5e7eb;
+    font-family: var(--mono); font-size: 11px; font-weight: 400;
+    padding: 4px 10px; border-radius: 5px;
+    white-space: nowrap; z-index: 9999; pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  }
+
+  /* NAS 셀 */
+  td.nas-col { width: 58px; text-align: center; padding: 8px 4px; }
+  td.status-col { width: 80px; padding: 8px 6px; }
+  .nas-badge { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; background: #fecaca; color: #991b1b; }
+
   td.branch-cell { font-size: 11px; color: var(--text-secondary); }
   td.enroll-col { text-align: center; padding: 8px 6px; }
   .enroll-num { font-family: var(--mono); font-size: 15px; font-weight: 700; color: var(--text-primary); }
-  td.nas-col { text-align: center; padding: 8px 6px; }
-
-  /* NAS OFF 배지 */
-  .nas-badge {
-    display: inline-flex; align-items: center; gap: 3px;
-    padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: 700;
-    background: #fecaca; color: #991b1b;
-  }
 
   td.date-val { text-align: center; padding: 0; font-family: var(--mono); font-size: 12px; font-weight: 500; }
   td.date-val.recent-col { border-left: 2px solid var(--mint); }
@@ -155,21 +198,23 @@
   footer { margin-top: 24px; font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-family: var(--mono); }
 
   @media (max-width: 640px) {
-    :root { --fixed-col-w: 140px; }
+    .table-fixed { width: 260px; }
+    .table-fixed table { width: 260px; }
+    th.class-name-col { width: 140px; }
+    td.class-name { width: 140px; max-width: 140px; }
+    th.status-col { width: 62px; }
+    td.status-col { width: 62px; }
+    .table-scroll { margin-left: 260px; }
     .hero-stats { gap: 6px; }
     .hero-stat { padding: 6px 10px; min-width: 52px; }
     .hero-stat .n { font-size: 17px; }
     .hero-title { font-size: 17px; }
-    .filter-btn { padding: 6px 10px; font-size: 11px; }
-    .info-bar, .nas-bar { font-size: 11px; }
-    th { padding: 8px 8px; font-size: 9px; }
-    td { padding: 6px 8px; font-size: 11px; }
-    td.class-name { font-size: 11px; }
-    .enroll-num { font-size: 13px; }
   }
 </style>
 </head>
 <body>
+
+<div id="siteid-tooltip"></div>
 
 <div class="topbar">
   <div class="logo">
@@ -261,7 +306,6 @@ async function init() {
     allBranches = data.branches || [];
     if (allRows.length > 0) dateHeaders = allRows[0].dates.map(d => d.label);
 
-    // NAS OFF 데이터 처리
     if (data.nasOffData) {
       nasOffIds = new Set(data.nasOffData.siteIds || []);
       nasTimestamp = data.nasOffData.timestamp || null;
@@ -276,7 +320,6 @@ async function init() {
       document.getElementById('branch-filter').style.display = 'none';
     }
 
-    // NAS OFF 배너 표시
     if (nasOffIds.size > 0) {
       document.getElementById('nas-bar').style.display = 'flex';
       document.getElementById('nas-bar-count').textContent = `현재 ${nasOffIds.size}개 교실 NAS OFF 상태`;
@@ -385,74 +428,96 @@ function renderTable() {
   }
 
   const showBranch = (_urlBranch === '' && currentBranch === '');
-  let fixedHead = '<thead><tr><th class="class-name">기관+교실명</th></tr></thead>';
+
+  // 고정 테이블 헤더: 기관+교실명 | 서비스상태 | NAS
+  const fixedHead = `<thead><tr><th class="class-name-col">기관+교실명</th><th class="status-col">서비스상태</th><th class="nas-col">NAS</th></tr></thead>`;
+
+  // 스크롤 테이블 헤더 (서비스상태 제거)
   let scrollHead = '<thead><tr>';
-  scrollHead += '<th class="nas-col">NAS</th>';
   if (showBranch) scrollHead += '<th>지사</th>';
-  scrollHead += '<th>시작일</th><th>요일</th><th>스케줄</th><th>상태</th><th class="enroll-col">등록<br>원아수</th>';
+  scrollHead += '<th>시작일</th><th>요일</th><th>스케줄</th><th class="enroll-col">등록<br>원아수</th>';
   dateHeaders.forEach((h, i) => {
     scrollHead += `<th class="date-col${i === 0 ? ' recent' : ''}">${h}</th>`;
   });
   scrollHead += '</tr></thead>';
 
-  let fixedBody = '<tbody>', scrollBody = '<tbody>';
+  let fixedRows = '', scrollRows = '';
 
   rows.forEach(r => {
     const isNasOff = nasOffIds.has(r.siteID);
     const sc = getStatusClass(r.status);
     const enroll = Number(r.enrollment) || 0;
     const rowClass = isNasOff ? ' class="nas-row"' : '';
+    const siteIdSafe = (r.siteID || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const classNameSafe = (r.className || '—').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-    fixedBody += `<tr${rowClass}><td class="class-name">${r.className || '—'}</td></tr>`;
+    fixedRows += `<tr${rowClass}>`;
+    fixedRows += `<td class="class-name" data-siteid="${siteIdSafe}">${classNameSafe}</td>`;
+    fixedRows += `<td class="status-col"><span class="status-badge ${sc}">${r.status || '—'}</span></td>`;
+    fixedRows += `<td class="nas-col">${isNasOff ? '<span class="nas-badge">OFF</span>' : ''}</td>`;
+    fixedRows += `</tr>`;
 
-    scrollBody += `<tr${rowClass}>`;
-    scrollBody += `<td class="nas-col">${isNasOff ? '<span class="nas-badge">OFF</span>' : ''}</td>`;
-    if (showBranch) scrollBody += `<td class="branch-cell">${r.branch || '—'}</td>`;
-    scrollBody += `<td style="color:var(--text-secondary);font-size:11px">${r.startDate || '—'}</td>`;
-    scrollBody += `<td style="color:var(--text-secondary)">${r.serviceDay || '—'}</td>`;
-    scrollBody += `<td style="color:var(--text-secondary);font-size:11px">${r.schedule || '—'}</td>`;
-    scrollBody += `<td><span class="status-badge ${sc}">${r.status || '—'}</span></td>`;
-    scrollBody += `<td class="enroll-col"><span class="enroll-num">${enroll || '—'}</span></td>`;
+    scrollRows += `<tr${rowClass}>`;
+    if (showBranch) scrollRows += `<td class="branch-cell">${r.branch || '—'}</td>`;
+    scrollRows += `<td style="color:var(--text-secondary);font-size:11px">${r.startDate || '—'}</td>`;
+    scrollRows += `<td style="color:var(--text-secondary)">${r.serviceDay || '—'}</td>`;
+    scrollRows += `<td style="color:var(--text-secondary);font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(r.schedule||'').replace(/"/g,'&quot;')}">${r.schedule || '—'}</td>`;
+    scrollRows += `<td class="enroll-col"><span class="enroll-num">${enroll || '—'}</span></td>`;
 
     r.dates.forEach((d, i) => {
       const isNonService = d.value === '⚪';
       const rc = i === 0 ? ' recent-col' : '';
       if (isNonService) {
-        scrollBody += `<td class="date-val${rc} non-service"><span>⚪</span></td>`;
+        scrollRows += `<td class="date-val${rc} non-service"><span>⚪</span></td>`;
       } else {
         const raw = (d.value === '' || d.value === null || d.value === undefined) ? null : Number(d.value);
         const val = (raw !== null && isNaN(raw)) ? null : raw;
         const ratio = (val !== null && enroll > 0) ? val / enroll : null;
         const { bg, text } = ratioToColor(ratio);
         const display = val === null ? '—' : val;
-        scrollBody += `<td class="date-val${rc}" style="background:${bg}"><span style="color:${text}">${display}</span></td>`;
+        scrollRows += `<td class="date-val${rc}" style="background:${bg}"><span style="color:${text}">${display}</span></td>`;
       }
     });
-    scrollBody += '</tr>';
+    scrollRows += '</tr>';
   });
-
-  fixedBody += '</tbody>';
-  scrollBody += '</tbody>';
 
   document.getElementById('content').innerHTML = `
     <div class="table-outer">
-      <div class="table-fixed"><table>${fixedHead}${fixedBody}</table></div>
-      <div class="table-scroll"><table>${scrollHead}${scrollBody}</table></div>
+      <div class="table-fixed">
+        <div class="thead-wrap"><table>${fixedHead}</table></div>
+        <div class="tbody-wrap"><table><tbody>${fixedRows}</tbody></table></div>
+      </div>
+      <div class="table-scroll"><table>${scrollHead}<tbody>${scrollRows}</tbody></table></div>
     </div>`;
 
   syncRowHeights();
+
+  // 세로 스크롤 동기화
+  const scrollEl = document.querySelector('.table-scroll');
+  const fixedBodyEl = document.querySelector('.table-fixed .tbody-wrap');
+  if (scrollEl && fixedBodyEl) {
+    scrollEl.addEventListener('scroll', () => {
+      fixedBodyEl.scrollTop = scrollEl.scrollTop;
+    });
+    // 고정 컬럼 위에서 휠 이벤트 발생 시 스크롤 영역으로 전달
+    fixedBodyEl.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      scrollEl.scrollTop += e.deltaY;
+      scrollEl.scrollLeft += e.deltaX;
+    }, { passive: false });
+  }
 }
 
 function syncRowHeights() {
-  const fixedRows = document.querySelectorAll('.table-fixed tbody tr');
-  const scrollRows = document.querySelectorAll('.table-scroll tbody tr');
-  fixedRows.forEach((row, i) => {
-    if (!scrollRows[i]) return;
-    const h = Math.max(row.offsetHeight, scrollRows[i].offsetHeight);
+  const fixedRowEls = document.querySelectorAll('.table-fixed .tbody-wrap tbody tr');
+  const scrollRowEls = document.querySelectorAll('.table-scroll tbody tr');
+  fixedRowEls.forEach((row, i) => {
+    if (!scrollRowEls[i]) return;
+    const h = Math.max(row.offsetHeight, scrollRowEls[i].offsetHeight);
     row.style.height = h + 'px';
-    scrollRows[i].style.height = h + 'px';
+    scrollRowEls[i].style.height = h + 'px';
   });
-  const fh = document.querySelector('.table-fixed thead tr');
+  const fh = document.querySelector('.table-fixed .thead-wrap thead tr');
   const sh = document.querySelector('.table-scroll thead tr');
   if (fh && sh) {
     const h = Math.max(fh.offsetHeight, sh.offsetHeight);
@@ -473,6 +538,27 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
     currentFilter = btn.dataset.filter;
     renderTable(); renderStats();
   });
+});
+
+// siteID 툴팁
+const _tooltip = document.getElementById('siteid-tooltip');
+document.addEventListener('mouseover', e => {
+  const td = e.target.closest('td.class-name');
+  if (td && td.dataset.siteid) {
+    _tooltip.textContent = td.dataset.siteid;
+    _tooltip.style.display = 'block';
+  }
+});
+document.addEventListener('mouseout', e => {
+  if (e.target.closest('td.class-name')) {
+    _tooltip.style.display = 'none';
+  }
+});
+document.addEventListener('mousemove', e => {
+  if (_tooltip.style.display === 'block') {
+    _tooltip.style.left = (e.clientX + 12) + 'px';
+    _tooltip.style.top = (e.clientY - 28) + 'px';
+  }
 });
 
 init();
