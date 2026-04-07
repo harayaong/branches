@@ -247,7 +247,11 @@
     </div>
     Playtag Ops
   </div>
-  <span class="live-dot" id="live-label">Connecting...</span>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span class="live-dot" id="live-label">Connecting...</span>
+    <span style="font-size:12px;color:var(--text-secondary);font-family:var(--mono)" id="user-label"></span>
+    <button onclick="logout()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--text-secondary);cursor:pointer;font-family:var(--sans);">로그아웃</button>
+  </div>
 </div>
 
 <div class="hero">
@@ -325,17 +329,35 @@
 <script>
 const API = 'https://script.google.com/macros/s/AKfycbzrliD6JIDRNIEllNcaWzZlcGuL7i7C3h-kHLuWYg0Xrv9F0doeqDXvCaWaDtu_4aU6dA/exec';
 
+// 토큰 확인 — 없으면 로그인 페이지로
+const _token = localStorage.getItem('pt_token');
+const _expires = localStorage.getItem('pt_expires');
+if (!_token || !_expires || Date.now() > parseInt(_expires)) {
+  localStorage.clear();
+  window.location.href = 'login.html';
+}
+const _savedBranch = localStorage.getItem('pt_branch') || '';
+const _userId = localStorage.getItem('pt_id') || '';
+
 let allRows = [], dateHeaders = [], allBranches = [];
 let nasOffIds = new Set(), nasTimestamp = null;
 let videoIds = new Set(), videoTimestamp = null;
-const _urlBranch = decodeURIComponent(new URLSearchParams(location.search).get('branch') || '');
+const _urlBranch = _savedBranch; // 로그인된 지사로 고정
 let currentBranch = _urlBranch, currentFilter = 'all', searchVal = '';
 
 async function init() {
   try {
-    const res = await fetch(API + (_urlBranch ? `?branch=${encodeURIComponent(_urlBranch)}` : ''));
+    const url = `${API}?token=${encodeURIComponent(_token)}` + (_savedBranch ? `&branch=${encodeURIComponent(_savedBranch)}` : '');
+    const res = await fetch(url);
     const data = await res.json();
-    if (!data.ok) throw new Error('API error');
+    if (!data.ok) {
+      if (data.error === 'unauthorized' || data.error === 'expired') {
+        localStorage.clear();
+        window.location.href = 'login.html';
+        return;
+      }
+      throw new Error('API error');
+    }
 
     allRows = data.rows;
     allBranches = data.branches || [];
@@ -355,6 +377,7 @@ async function init() {
     const timeStr = now.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
     document.getElementById('footer-time').textContent = `Last updated: ${timeStr}`;
     document.getElementById('live-label').textContent = 'Live';
+    document.getElementById('user-label').textContent = _userId;
 
     if (_urlBranch) {
       document.getElementById('branch-filter').style.display = 'none';
@@ -629,6 +652,11 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
     renderTable(); renderStats();
   });
 });
+
+function logout() {
+  localStorage.clear();
+  window.location.href = 'login.html';
+}
 
 // siteID 툴팁 + 클립보드 복사
 const _tooltip = document.getElementById('siteid-tooltip');
