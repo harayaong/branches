@@ -41,7 +41,7 @@
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
 
   .hero { background: linear-gradient(135deg, var(--mint-dark) 0%, var(--mint) 60%, #4dd9bf 100%); padding: 20px 16px; color: white; }
-  .hero-inner { max-width: 1360px; margin: 0 auto; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .hero-inner { max-width: 100%; margin: 0 auto; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
   .hero-label { font-size: 10px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; opacity: .8; margin-bottom: 4px; }
   .hero-title { font-size: 20px; font-weight: 700; letter-spacing: -.02em; line-height: 1.2; }
   .hero-sub { font-size: 12px; opacity: .75; margin-top: 4px; }
@@ -50,7 +50,7 @@
   .hero-stat .n { font-size: 20px; font-weight: 700; display: block; font-family: var(--mono); line-height: 1; }
   .hero-stat .l { font-size: 9px; opacity: .75; letter-spacing: .08em; text-transform: uppercase; margin-top: 3px; display: block; }
 
-  .main { max-width: 1360px; margin: 0 auto; padding: 16px 16px 48px; }
+  .main { max-width: 100%; margin: 0 auto; padding: 16px 16px 48px; overflow-x: hidden; }
 
   .branch-filter { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin-bottom: 12px; box-shadow: var(--shadow-sm); }
   .branch-filter-label { font-size: 10px; font-weight: 600; color: var(--text-muted); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 10px; }
@@ -90,12 +90,12 @@
      테이블 레이아웃
      고정컬럼: 기관+교실명(200px) + NAS(58px) = 258px
   ===================== */
-  .table-outer { position: relative; overflow: hidden; }
+  .table-outer { position: relative; overflow: hidden; width: 100%; }
 
   /* 고정 컬럼 영역 */
   .table-fixed {
     position: absolute; left: 0; top: 0;
-    width: 338px;
+    width: 350px;
     z-index: 10;
     background: var(--white);
     box-shadow: 3px 0 8px rgba(0,0,0,0.08);
@@ -104,17 +104,18 @@
   }
   .table-fixed .thead-wrap { flex-shrink: 0; overflow: hidden; }
   .table-fixed .tbody-wrap { overflow: hidden; max-height: calc(100vh - 340px); }
-  .table-fixed table { width: 338px; table-layout: fixed; border-collapse: collapse; font-size: 12px; }
+  .table-fixed table { width: 350px; table-layout: fixed; border-collapse: collapse; font-size: 12px; }
 
   /* 스크롤 컬럼 영역 */
   .table-scroll {
-    margin-left: 338px;
+    margin-left: 350px;
     overflow-x: auto;
     overflow-y: auto;
     max-height: calc(100vh - 300px);
     -webkit-overflow-scrolling: touch;
+    width: calc(100% - 350px);
   }
-  .table-scroll table { width: max-content; border-collapse: collapse; font-size: 12px; }
+  .table-scroll table { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 12px; }
   .table-scroll thead tr { position: sticky; top: 0; z-index: 5; }
 
   /* 헤더 공통 */
@@ -129,8 +130,8 @@
   }
   th.class-name-col { width: 200px; }
   th.status-col { width: 80px; }
-  th.nas-col { width: 58px; min-width: 58px; text-align: center; padding: 10px 4px; }
-  th.date-col { text-align: center; min-width: 62px; padding: 10px 4px; color: var(--text-muted); font-size: 10px; }
+  th.nas-col { width: 70px; min-width: 70px; text-align: center; padding: 10px 4px; }
+  th.date-col { text-align: center; min-width: 46px; padding: 10px 2px; color: var(--text-muted); font-size: 9px; }
   th.date-col.recent { color: var(--mint-dark); border-left: 2px solid var(--mint); }
   th.enroll-col { text-align: center; min-width: 52px; }
 
@@ -149,7 +150,7 @@
     width: 200px; max-width: 200px;
     font-weight: 500; font-size: 12px;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    cursor: default;
+    cursor: pointer;
   }
 
   /* 전역 siteID 툴팁 (fixed) */
@@ -164,7 +165,7 @@
   }
 
   /* NAS 셀 */
-  td.nas-col { width: 58px; text-align: center; padding: 8px 4px; }
+  td.nas-col { width: 70px; text-align: center; padding: 8px 4px; }
   td.status-col { width: 80px; padding: 8px 6px; }
   .nas-badge { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; background: #fecaca; color: #991b1b; }
   .video-badge { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; background: #fef3c7; color: #92400e; }
@@ -181,7 +182,7 @@
   td.enroll-col { text-align: center; padding: 8px 6px; }
   .enroll-num { font-family: var(--mono); font-size: 15px; font-weight: 700; color: var(--text-primary); }
 
-  td.date-val { text-align: center; padding: 0; font-family: var(--mono); font-size: 12px; font-weight: 500; }
+  td.date-val { text-align: center; padding: 0; font-family: var(--mono); font-size: 11px; font-weight: 500; min-width: 46px; }
   td.date-val.recent-col { border-left: 2px solid var(--mint); }
   td.date-val span { display: flex; align-items: center; justify-content: center; width: 100%; height: 44px; }
   td.date-val.non-service { background: #f9fafb; }
@@ -498,7 +499,7 @@ function renderTable() {
     fixedRows += `<tr${rowClass}>`;
     fixedRows += `<td class="class-name" data-siteid="${siteIdSafe}">${classNameSafe}</td>`;
     fixedRows += `<td class="status-col"><span class="status-badge ${sc}">${r.status || '—'}</span></td>`;
-    fixedRows += `<td class="nas-col">${isNasOff ? '<span class="nas-badge">NAS</span>' : ''}${isVideo ? '<span class="video-badge">V</span>' : ''}</td>`;
+    fixedRows += `<td class="nas-col">${isNasOff ? '<span class="nas-badge">NAS</span>' : ''}${isVideo ? '<span class="video-badge">↓85%</span>' : ''}</td>`;
     fixedRows += `</tr>`;
 
     scrollRows += `<tr${rowClass}>`;
@@ -557,16 +558,33 @@ function syncRowHeights() {
   const scrollRowEls = document.querySelectorAll('.table-scroll tbody tr');
   fixedRowEls.forEach((row, i) => {
     if (!scrollRowEls[i]) return;
+    // 높이 초기화 후 재측정
+    row.style.height = '';
+    scrollRowEls[i].style.height = '';
     const h = Math.max(row.offsetHeight, scrollRowEls[i].offsetHeight);
     row.style.height = h + 'px';
     scrollRowEls[i].style.height = h + 'px';
   });
+
+  // 헤더 높이 동기화
   const fh = document.querySelector('.table-fixed .thead-wrap thead tr');
   const sh = document.querySelector('.table-scroll thead tr');
   if (fh && sh) {
+    fh.style.height = '';
+    sh.style.height = '';
     const h = Math.max(fh.offsetHeight, sh.offsetHeight);
     fh.style.height = h + 'px';
     sh.style.height = h + 'px';
+  }
+
+  // table-outer 높이를 스크롤 영역 전체 높이에 맞춤
+  const outer = document.querySelector('.table-outer');
+  const scroll = document.querySelector('.table-scroll');
+  const fixed = document.querySelector('.table-fixed');
+  if (outer && scroll && fixed) {
+    const totalH = scroll.scrollHeight;
+    outer.style.height = Math.min(totalH, window.innerHeight - 300) + 'px';
+    fixed.style.height = outer.offsetHeight + 'px';
   }
 }
 
@@ -584,12 +602,12 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
   });
 });
 
-// siteID 툴팁
+// siteID 툴팁 + 클립보드 복사
 const _tooltip = document.getElementById('siteid-tooltip');
 document.addEventListener('mouseover', e => {
   const td = e.target.closest('td.class-name');
   if (td && td.dataset.siteid) {
-    _tooltip.textContent = td.dataset.siteid;
+    _tooltip.textContent = td.dataset.siteid + ' · 클릭하여 복사';
     _tooltip.style.display = 'block';
   }
 });
@@ -602,6 +620,20 @@ document.addEventListener('mousemove', e => {
   if (_tooltip.style.display === 'block') {
     _tooltip.style.left = (e.clientX + 12) + 'px';
     _tooltip.style.top = (e.clientY - 28) + 'px';
+  }
+});
+document.addEventListener('click', e => {
+  const td = e.target.closest('td.class-name');
+  if (td && td.dataset.siteid) {
+    navigator.clipboard.writeText(td.dataset.siteid).then(() => {
+      _tooltip.textContent = '✓ 복사됨: ' + td.dataset.siteid;
+      _tooltip.style.background = '#059669';
+      _tooltip.style.display = 'block';
+      setTimeout(() => {
+        _tooltip.style.display = 'none';
+        _tooltip.style.background = '';
+      }, 1500);
+    });
   }
 });
 
