@@ -560,6 +560,24 @@ function renderTable() {
       scrollEl.scrollTop += e.deltaY;
       scrollEl.scrollLeft += e.deltaX;
     }, { passive: false });
+
+    // 모바일 터치: 고정 컬럼 터치를 스크롤 영역으로 전달
+    const fixedEl = document.querySelector('.table-fixed');
+    let touchStartX = 0, touchStartY = 0;
+    fixedEl.addEventListener('touchstart', (e) => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    fixedEl.addEventListener('touchmove', (e) => {
+      const dx = touchStartX - e.touches[0].clientX;
+      const dy = touchStartY - e.touches[0].clientY;
+      scrollEl.scrollLeft += dx;
+      scrollEl.scrollTop += dy;
+      fixedBodyEl.scrollTop += dy;
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      e.preventDefault();
+    }, { passive: false });
   }
 }
 
