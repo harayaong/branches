@@ -211,17 +211,22 @@
   footer { margin-top: 24px; font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-family: var(--mono); }
 
   @media (max-width: 640px) {
-    .table-fixed { width: 260px; }
-    .table-fixed table { width: 260px; }
-    th.class-name-col { width: 140px; }
-    td.class-name { width: 140px; max-width: 140px; }
-    th.status-col { width: 62px; }
-    td.status-col { width: 62px; }
-    .table-scroll { margin-left: 260px; }
+    /* 모바일: 기관+교실명(130px) + NAS(50px) = 180px */
+    .table-fixed { width: 180px; }
+    .table-fixed table { width: 180px; }
+    th.class-name-col { width: 130px; }
+    td.class-name { width: 130px; max-width: 130px; font-size: 11px; }
+    th.status-col { display: none; }
+    td.status-col { display: none; }
+    th.nas-col { width: 50px; min-width: 50px; }
+    td.nas-col { width: 50px; }
+    .table-scroll { margin-left: 180px; width: calc(100% - 180px); }
     .hero-stats { gap: 6px; }
     .hero-stat { padding: 6px 10px; min-width: 52px; }
     .hero-stat .n { font-size: 17px; }
     .hero-title { font-size: 17px; }
+    .video-badge { font-size: 9px; padding: 2px 4px; }
+    .nas-badge { font-size: 9px; padding: 2px 4px; }
   }
 </style>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2300c5a1'/><rect x='5' y='20' width='4' height='7' rx='1' fill='white'/><rect x='11' y='14' width='4' height='13' rx='1' fill='white'/><rect x='17' y='9' width='4' height='18' rx='1' fill='white'/><rect x='23' y='5' width='4' height='22' rx='1' fill='white'/></svg>">
@@ -257,6 +262,7 @@
       <div class="hero-stat"><span class="n" id="stat-on">—</span><span class="l">Active</span></div>
       <div class="hero-stat"><span class="n" id="stat-off">—</span><span class="l">Inactive</span></div>
       <div class="hero-stat"><span class="n" id="stat-nas" style="color:#fca5a5">—</span><span class="l">NAS OFF</span></div>
+      <div class="hero-stat"><span class="n" id="stat-video" style="color:#fde68a">—</span><span class="l">↓85%</span></div>
     </div>
   </div>
 </div>
@@ -300,7 +306,7 @@
     <button class="filter-btn" data-filter="on">Active</button>
     <button class="filter-btn" data-filter="off">Inactive</button>
     <button class="filter-btn" data-filter="nas">NAS OFF</button>
-    <button class="filter-btn" data-filter="video">VIDEO &lt;85%</button>
+    <button class="filter-btn" data-filter="video">VIDEO ↓85%</button>
     <span class="count-badge" id="count-badge"></span>
   </div>
 
@@ -406,8 +412,10 @@ function updateHero() {
   document.title = `${label} — Playtag Ops`;
   const f = getFiltered();
   const nasCount = f.filter(r => nasOffIds.has(r.siteID)).length;
+  const videoCount = f.filter(r => videoIds.has(r.siteID)).length;
   document.getElementById('header-meta').textContent = `총 ${f.length}개 교실`;
   document.getElementById('stat-nas').textContent = nasCount;
+  document.getElementById('stat-video').textContent = videoCount;
 }
 
 function isOn(s) { return String(s).toUpperCase().includes('ON'); }
@@ -442,10 +450,12 @@ function renderStats() {
   const f = getFiltered();
   const on = f.filter(r => isOn(r.status)).length;
   const nas = f.filter(r => nasOffIds.has(r.siteID)).length;
+  const video = f.filter(r => videoIds.has(r.siteID)).length;
   document.getElementById('stat-total').textContent = f.length;
   document.getElementById('stat-on').textContent = on;
   document.getElementById('stat-off').textContent = f.length - on;
   document.getElementById('stat-nas').textContent = nas;
+  document.getElementById('stat-video').textContent = video;
   document.getElementById('count-badge').textContent = `${f.length}개 교실`;
 }
 
